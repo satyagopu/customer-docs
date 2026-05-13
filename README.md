@@ -59,24 +59,25 @@ Before installation, ensure the following are available in your environment:
 | **Network** | Connectivity from execution environment to the Teradata host and Databricks SQL Warehouse |
  
 ---
- 
+
 ## Installation & Setup
  
 ### Step 1 — Configure INI Files
  
-The `config/` folder contains `.ini.example` template files for every setting. Before running the pipeline, you must create your own copies of these files and fill in your credentials.
- 
-For each file in the `config/` folder, create a copy without the `.example` extension and populate it with your values:
+Open the `datapipeline.dist/config/` folder and fill in your credentials and settings in each `.ini` file. Also configure the tables you want to migrate in `datapipeline.dist/metadata/pipeline_jobs.ini`.
  
 ```
-config/alerts.ini.example       →   config/alerts.ini
-config/databricks.ini.example   →   config/databricks.ini
-config/s3.ini.example           →   config/s3.ini
-config/sources.ini.example      →   config/sources.ini
-config/paths.ini.example        →   config/paths.ini
+datapipeline.dist/
+├── config/
+│   ├── alerts.ini           ← Mailgun API key, from/to addresses
+│   ├── databricks.ini       ← Workspace URL, warehouse path, catalog, schema
+│   ├── s3.ini               ← S3 bucket, region, credentials
+│   ├── sources.ini          ← Teradata connection details & active source
+│   └── paths.ini            ← Output paths for logs, artifacts, control file
+└── metadata/
+    ├── pipeline_jobs.ini    ← Tables, LOAD_TYPE, WATERMARK_COLUMNS, PRIMARY_KEYS
+    └── type_mapping.ini     ← Teradata → Databricks data type mappings
 ```
- 
-Also configure the tables you want to migrate in `metadata/pipeline_jobs.ini`.
  
 Refer to the [Configuration Reference](#configuration-reference) section below for details on each setting.
  
@@ -84,51 +85,26 @@ Refer to the [Configuration Reference](#configuration-reference) section below f
  
 ---
  
-### Step 2 — Create & Activate a Virtual Environment
+### Step 2 — Run the Application
  
 ```bash
-python -m venv venv
+.\datapipeline.dist\datapipeline.exe
 ```
- 
-**Windows:**
-```bash
-.\venv\Scripts\Activate
-```
- 
-**macOS / Linux:**
-```bash
-source venv/bin/activate
-```
- 
----
- 
-### Step 3 — Install the Wheel Package
- 
-```bash
-pip install data_migration-0.1.0-py3-none-any.whl
-```
- 
----
- 
-### Step 4 — Run the Pipeline
- 
-```bash
-run-pipeline
-```
- 
-The pipeline will execute all migration steps automatically — preflight checks, schema sync, extraction, S3 upload, DDL creation, ingestion, reconciliation, and alerts.
  
 #### Optional flags
  
 ```bash
+# Force a specific table to do a full reload this run
+.\datapipeline.dist\datapipeline.exe --force-full orders
+ 
+# Force multiple tables to full reload
+.\datapipeline.dist\datapipeline.exe --force-full orders --force-full customers
+ 
 # Verify connectivity only — no data is moved
-run-pipeline --test-connection
+.\datapipeline.dist\datapipeline.exe --test-connection
  
 # Run preflight checks only
-run-pipeline --preflight-only
- 
-# Use a custom configuration directory
-run-pipeline --config-dir /path/to/my/config
+.\datapipeline.dist\datapipeline.exe --preflight-only
 ```
  
 ---
